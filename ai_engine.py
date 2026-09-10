@@ -6,6 +6,11 @@ import pandas as pd
 from dotenv import load_dotenv
 from google import genai
 
+try:
+    import streamlit as st
+except Exception:
+    st = None
+
 from database import DB_NAME
 
 load_dotenv()
@@ -17,8 +22,13 @@ def get_client():
     global _client
     if _client is None:
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not api_key and st is not None:
+            try:
+                api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
+            except Exception:
+                pass
         if not api_key:
-            raise ValueError("Gemini API key not found. Add GEMINI_API_KEY to your .env file.")
+            raise ValueError("Gemini API key not found. Add GEMINI_API_KEY to your local .env or Streamlit Cloud Secrets.")
         _client = genai.Client(api_key=api_key)
     return _client
 
